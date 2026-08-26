@@ -1,0 +1,27 @@
+{
+  "name": "nodeseek-keyword-push",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NodeSeek keyword monitor on Cloudflare Workers + D1 + Telegram",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "cf-typegen": "wrangler types",
+    "db:create": "wrangler d1 create nodeseek-keyword-push",
+    "db:migrate:local": "wrangler d1 migrations apply nodeseek-keyword-push --local",
+    "db:migrate:remote": "wrangler d1 migrations apply nodeseek-keyword-push --remote",
+    "tail": "wrangler tail",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "hono": "^4.13.4"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250823.0",
+    "typescript": "^5.9.2",
+    "wrangler": "^4.86.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,21 @@
+name = "nodeseek-keyword-push"
+main = "src/index.ts"
+compatibility_date = "2025-08-01"
+compatibility_flags = ["nodejs_compat"]
+
+# After: npx wrangler d1 create nodeseek-keyword-push
+# replace database_id with the real UUID from that command.
+[[d1_databases]]
+binding = "DB"
+database_name = "nodeseek-keyword-push"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
+
+[triggers]
+crons = ["* * * * *"]
+
+[vars]
+RSS_URL = "https://rss.nodeseek.com/"
+# Optional: comma-separated Telegram user IDs allowed to manage keywords.
+# Leave empty to allow anyone who can message the bot (not recommended).
+ALLOWED_USER_IDS = ""

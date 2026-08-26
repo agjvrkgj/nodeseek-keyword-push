@@ -1,0 +1,4 @@
+# Local secrets for `wrangler dev`
+TELEGRAM_BOT_TOKEN=123456:ABC...
+ADMIN_SECRET=change-me-to-a-long-random-string
+ALLOWED_USER_IDS=
