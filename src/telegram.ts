@@ -83,12 +83,12 @@ export function formatMatchMessage(post: RssPost, keyword: string): string {
   const lines = [
     `🔔 <b>关键词命中</b>  <code>${escapeHtml(keyword)}</code>`,
     "",
-    `<b>${title}</b>`,
-    `${category} · ${author}`,
+    `标题：<b>${title}</b>`,
+    `分类：${category}　用户：${author}`,
   ];
 
   if (snippet) {
-    lines.push("", `<i>${escapeHtml(snippet)}</i>`);
+    lines.push("", `摘要：`, `<i>${escapeHtml(snippet)}</i>`);
   }
 
   lines.push("", `<a href="${link}">查看帖子</a>`);
