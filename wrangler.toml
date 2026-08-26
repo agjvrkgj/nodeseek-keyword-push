@@ -8,7 +8,7 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "DB"
 database_name = "nodeseek-keyword-push"
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "2887f6b1-f830-4406-b830-01e317d59f9e"
 migrations_dir = "migrations"
 
 [triggers]
@@ -18,4 +18,4 @@ crons = ["* * * * *"]
 RSS_URL = "https://rss.nodeseek.com/"
 # Optional: comma-separated Telegram user IDs allowed to manage keywords.
 # Leave empty to allow anyone who can message the bot (not recommended).
-ALLOWED_USER_IDS = ""
+ALLOWED_USER_IDS = "5093323865"
