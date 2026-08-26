@@ -39,6 +39,7 @@ ALLOWED_USER_IDS = "你的TG用户ID"   # 建议填写
 ## 5. 配置 Secrets
 
 Worker → **Settings** → **Variables and Secrets**，添加并 Deploy：
+（设置时记得值要勾选密钥）
 
 | 名称 | 类型 | 值 |
 |------|------|-----|
