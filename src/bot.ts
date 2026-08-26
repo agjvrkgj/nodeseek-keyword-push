@@ -61,6 +61,53 @@ async function reply(env: Env, chatId: number, text: string): Promise<void> {
   await sendMessage(env, chatId, text, { disable_web_page_preview: true, parse_mode: undefined });
 }
 
+type PendingAction = "add" | "del" | "on" | "off";
+
+const PENDING_PROMPTS: Record<PendingAction, { text: string; placeholder: string }> = {
+  add: { text: "请直接回复要添加的关键词。", placeholder: "输入关键词，例如 VPS" },
+  del: { text: "请直接回复要删除的关键词或 ID。", placeholder: "输入关键词或 ID" },
+  on: { text: "请直接回复要启用的关键词或 ID。", placeholder: "输入关键词或 ID" },
+  off: { text: "请直接回复要停用的关键词或 ID。", placeholder: "输入关键词或 ID" },
+};
+
+function pendingActionKey(chatId: number, userId: number | undefined): string {
+  return `pending_action:${chatId}:${userId ?? "anonymous"}`;
+}
+
+function parsePendingAction(value: string | null): PendingAction | null {
+  if (value === "add" || value === "del" || value === "on" || value === "off") return value;
+  return null;
+}
+
+async function applyPendingAction(
+  env: Env,
+  action: PendingAction,
+  arg: string,
+): Promise<{ ok: boolean; message: string }> {
+  switch (action) {
+    case "add":
+      return addKeyword(env.DB, arg);
+    case "del":
+      return deleteKeyword(env.DB, arg);
+    case "on":
+      return setKeywordEnabled(env.DB, arg, true);
+    case "off":
+      return setKeywordEnabled(env.DB, arg, false);
+  }
+}
+
+async function promptForArg(env: Env, chatId: number, action: PendingAction): Promise<void> {
+  const prompt = PENDING_PROMPTS[action];
+  await sendMessage(env, chatId, prompt.text, {
+    disable_web_page_preview: true,
+    parse_mode: undefined,
+    reply_markup: {
+      force_reply: true,
+      input_field_placeholder: prompt.placeholder,
+    },
+  });
+}
+
 export async function handleTelegramUpdate(env: Env, update: TgUpdate): Promise<void> {
   const message = update.message;
   if (!message?.text) return;
@@ -68,15 +115,27 @@ export async function handleTelegramUpdate(env: Env, update: TgUpdate): Promise<
   const chatId = message.chat.id;
   const userId = message.from?.id;
   const text = message.text.trim();
+  const pendingKey = pendingActionKey(chatId, userId);
 
   if (!isAllowed(env, userId)) {
     await reply(env, chatId, "无权操作。请在 ALLOWED_USER_IDS 中加入你的 Telegram 用户 ID。");
     return;
   }
 
+  if (!text.startsWith("/")) {
+    const pending = parsePendingAction(await getMeta(env.DB, pendingKey));
+    if (pending) {
+      await setMeta(env.DB, pendingKey, "");
+      const result = await applyPendingAction(env, pending, text);
+      await reply(env, chatId, result.message);
+      return;
+    }
+  }
+
   const [cmdRaw, ...rest] = text.split(/\s+/);
   const cmd = cmdRaw.split("@")[0].toLowerCase();
   const arg = rest.join(" ").trim();
+  await setMeta(env.DB, pendingKey, "");
 
   switch (cmd) {
     case "/start": {
@@ -103,7 +162,8 @@ export async function handleTelegramUpdate(env: Env, update: TgUpdate): Promise<
     }
     case "/add": {
       if (!arg) {
-        await reply(env, chatId, "用法：/add 关键词");
+        await setMeta(env.DB, pendingKey, "add");
+        await promptForArg(env, chatId, "add");
         return;
       }
       const result = await addKeyword(env.DB, arg);
@@ -114,7 +174,8 @@ export async function handleTelegramUpdate(env: Env, update: TgUpdate): Promise<
     case "/delete":
     case "/rm": {
       if (!arg) {
-        await reply(env, chatId, "用法：/del 关键词或ID");
+        await setMeta(env.DB, pendingKey, "del");
+        await promptForArg(env, chatId, "del");
         return;
       }
       const result = await deleteKeyword(env.DB, arg);
@@ -123,7 +184,8 @@ export async function handleTelegramUpdate(env: Env, update: TgUpdate): Promise<
     }
     case "/on": {
       if (!arg) {
-        await reply(env, chatId, "用法：/on 关键词或ID");
+        await setMeta(env.DB, pendingKey, "on");
+        await promptForArg(env, chatId, "on");
         return;
       }
       const result = await setKeywordEnabled(env.DB, arg, true);
@@ -132,7 +194,8 @@ export async function handleTelegramUpdate(env: Env, update: TgUpdate): Promise<
     }
     case "/off": {
       if (!arg) {
-        await reply(env, chatId, "用法：/off 关键词或ID");
+        await setMeta(env.DB, pendingKey, "off");
+        await promptForArg(env, chatId, "off");
         return;
       }
       const result = await setKeywordEnabled(env.DB, arg, false);
