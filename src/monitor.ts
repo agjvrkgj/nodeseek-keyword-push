@@ -68,7 +68,9 @@ export async function runMonitor(env: Env): Promise<MonitorResult> {
 
       let notified = false;
       if (!paused && chatId && keywords.length > 0) {
-        notified = await sendMessage(env, chatId, formatMatchMessage(post, matched));
+        notified = await sendMessage(env, chatId, formatMatchMessage(post, matched), {
+          disable_web_page_preview: true,
+        });
         if (notified) result.notified += 1;
       }
 

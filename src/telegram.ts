@@ -43,22 +43,55 @@ function escapeHtml(s: string): string {
     .replace(/>/g, "&gt;");
 }
 
+/** NodeSeek RSS category slug → 中文版块名 */
+const CATEGORY_LABELS: Record<string, string> = {
+  daily: "日常",
+  tech: "技术",
+  info: "情报",
+  review: "测评",
+  trade: "交易",
+  carpool: "拼车",
+  promote: "推广",
+  life: "生活",
+  dev: "Dev",
+  "photo-share": "贴图",
+  expose: "曝光",
+  nonsense: "无意义",
+  sandbox: "沙盒",
+};
+
+function categoryLabel(category: string | undefined): string {
+  const key = (category || "").trim().toLowerCase();
+  if (!key) return "未知";
+  return CATEGORY_LABELS[key] || category || "未知";
+}
+
+function truncateText(text: string, maxLen: number): string {
+  const normalized = text.replace(/\s+/g, " ").trim();
+  if (!normalized) return "";
+  if (normalized.length <= maxLen) return normalized;
+  return normalized.slice(0, maxLen).trimEnd() + "…";
+}
+
 export function formatMatchMessage(post: RssPost, keyword: string): string {
-  const snippet = post.description
-    ? escapeHtml(post.description.slice(0, 280)) + (post.description.length > 280 ? "…" : "")
-    : "";
+  const title = escapeHtml(post.title || "（无标题）");
+  const category = escapeHtml(categoryLabel(post.category));
+  const author = escapeHtml(post.author || "匿名");
+  const snippet = truncateText(post.description, 120);
+  const link = escapeHtml(post.link);
 
   const lines = [
-    `🔔 <b>关键词命中</b>：<code>${escapeHtml(keyword)}</code>`,
+    `🔔 <b>关键词命中</b>  <code>${escapeHtml(keyword)}</code>`,
     "",
-    `<b>${escapeHtml(post.title)}</b>`,
-    `${escapeHtml(post.category || "unknown")} · ${escapeHtml(post.author || "anonymous")}`,
-    `<a href="${escapeHtml(post.link)}">${escapeHtml(post.link)}</a>`,
+    `<b>${title}</b>`,
+    `${category} · ${author}`,
   ];
 
   if (snippet) {
-    lines.push("", snippet);
+    lines.push("", `<i>${escapeHtml(snippet)}</i>`);
   }
+
+  lines.push("", `<a href="${link}">查看帖子</a>`);
 
   return lines.join("\n");
 }
