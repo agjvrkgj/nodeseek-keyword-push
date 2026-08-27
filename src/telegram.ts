@@ -125,6 +125,7 @@ export async function setBotCommands(env: Env): Promise<void> {
       { command: "pause", description: "暂停推送" },
       { command: "resume", description: "恢复推送" },
       { command: "check", description: "立即检查一次 RSS" },
+      { command: "signin", description: "立即签到 NodeSeek" },
       { command: "status", description: "查看运行状态" },
     ],
   });
