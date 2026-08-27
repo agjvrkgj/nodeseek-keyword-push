@@ -9,7 +9,7 @@ import {
 } from "./db";
 import { findMatchedKeyword } from "./match";
 import { fetchRss } from "./rss";
-import { formatMatchMessage, sendMessage } from "./telegram";
+import { formatMatchMessage, matchMessageKeyboard, sendMessage } from "./telegram";
 import type { Env } from "./types";
 
 export interface MonitorResult {
@@ -70,6 +70,7 @@ export async function runMonitor(env: Env): Promise<MonitorResult> {
       if (!paused && chatId && keywords.length > 0) {
         notified = await sendMessage(env, chatId, formatMatchMessage(post, matched), {
           disable_web_page_preview: true,
+          reply_markup: matchMessageKeyboard(post),
         });
         if (notified) result.notified += 1;
       }

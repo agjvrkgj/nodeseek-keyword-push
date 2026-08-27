@@ -83,17 +83,22 @@ export function formatMatchMessage(post: RssPost, keyword: string): string {
   const lines = [
     `🔔 <b>关键词命中</b>  <code>${escapeHtml(keyword)}</code>`,
     "",
-    `标题：<b>${title}</b>`,
-    `分类：${category}　用户：${author}`,
+    `标题：<a href="${link}"><b>${title}</b></a>`,
+    `分类：<code>${category}</code>　用户：<code>${author}</code>`,
   ];
 
   if (snippet) {
     lines.push("", `摘要：`, `<i>${escapeHtml(snippet)}</i>`);
   }
 
-  lines.push("", `<a href="${link}">查看帖子</a>`);
-
   return lines.join("\n");
+}
+
+/** Large tap target under the message (easier than a trailing text link). */
+export function matchMessageKeyboard(post: RssPost): Record<string, unknown> {
+  return {
+    inline_keyboard: [[{ text: "查看帖子", url: post.link }]],
+  };
 }
 
 export async function setWebhook(env: Env, workerUrl: string): Promise<{ ok: boolean; detail: string }> {
