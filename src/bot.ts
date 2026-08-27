@@ -7,6 +7,7 @@ import {
   setKeywordEnabled,
   setMeta,
 } from "./db";
+import { formatCheckInResult, getLastCheckInResult, runDailyCheckIn } from "./checkin";
 import { runMonitor } from "./monitor";
 import { sendMessage } from "./telegram";
 import type { Env } from "./types";
@@ -45,6 +46,7 @@ const HELP = `NodeSeek 关键词监控
 /pause — 暂停推送
 /resume — 恢复推送
 /check — 立即检查 RSS
+/signin — 立即签到 NodeSeek
 /status — 运行状态
 /help — 帮助
 
@@ -236,12 +238,20 @@ export async function handleTelegramUpdate(env: Env, update: TgUpdate): Promise<
       );
       return;
     }
+    case "/signin":
+    case "/checkin": {
+      await reply(env, chatId, "正在签到 NodeSeek…");
+      const result = await runDailyCheckIn(env, { force: true, notify: false });
+      await reply(env, chatId, formatCheckInResult(result));
+      return;
+    }
     case "/status": {
       const chat = await getMeta(env.DB, "chat_id");
       const paused = (await getMeta(env.DB, "paused")) === "1";
       const bootstrapped = (await getMeta(env.DB, "bootstrapped")) === "1";
       const last = await getMeta(env.DB, "last_check_at");
       const summary = await getMeta(env.DB, "last_check_summary");
+      const checkIn = await getLastCheckInResult(env.DB);
       const keywords = await listKeywords(env.DB);
       const enabled = keywords.filter((k) => k.enabled).length;
 
@@ -256,6 +266,7 @@ export async function handleTelegramUpdate(env: Env, update: TgUpdate): Promise<
           `关键词：${enabled}/${keywords.length} 启用`,
           `上次检查：${last || "无"}`,
           summary ? `摘要：${summary}` : "",
+          checkIn ? `签到：${checkIn}` : "签到：暂无记录",
         ]
           .filter(Boolean)
           .join("\n"),

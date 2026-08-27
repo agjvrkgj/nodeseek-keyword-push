@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { handleTelegramUpdate } from "./bot";
+import { runDailyCheckIn } from "./checkin";
 import { runMonitor } from "./monitor";
 import { setBotCommands, setWebhook } from "./telegram";
 import type { Env } from "./types";
@@ -10,7 +11,7 @@ app.get("/", (c) =>
   c.json({
     name: "nodeseek-keyword-push",
     status: "ok",
-    hint: "POST /telegram · GET /check?secret=... · GET /setup-webhook?secret=...",
+    hint: "POST /telegram · GET /check?secret=... · GET /checkin?secret=... · GET /setup-webhook?secret=...",
   }),
 );
 
@@ -38,6 +39,16 @@ app.get("/check", async (c) => {
   return c.json({ ok: !result.error, ...result });
 });
 
+app.get("/checkin", async (c) => {
+  const secret = c.req.query("secret");
+  if (!secret || secret !== c.env.ADMIN_SECRET) {
+    return c.json({ ok: false, error: "unauthorized" }, 401);
+  }
+
+  const result = await runDailyCheckIn(c.env, { force: true, notify: true });
+  return c.json(result);
+});
+
 app.post("/telegram", async (c) => {
   try {
     const update = await c.req.json();
@@ -54,9 +65,12 @@ export default {
 
   async scheduled(_event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
     ctx.waitUntil(
-      runMonitor(env).then((result) => {
-        console.log("cron monitor:", JSON.stringify(result));
-      }),
+      Promise.all([runMonitor(env), runDailyCheckIn(env, { notify: true })]).then(
+        ([monitor, checkIn]) => {
+          console.log("cron monitor:", JSON.stringify(monitor));
+          if (checkIn.attempted) console.log("cron check-in:", JSON.stringify(checkIn));
+        },
+      ),
     );
   },
 };

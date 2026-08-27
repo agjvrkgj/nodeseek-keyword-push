@@ -45,6 +45,15 @@ Worker → **Settings** → **Variables and Secrets**，添加并 Deploy：
 |------|------|-----|
 | `TELEGRAM_BOT_TOKEN` | Secret | BotFather 的 Token |
 | `ADMIN_SECRET` | Secret | 自设长随机串（记下来） |
+| `NODESEEK_COOKIE` | Secret | 登录 NodeSeek 后请求头中的完整 Cookie；不填则关闭自动签到 |
+
+自动签到还可添加普通 Variable：
+
+| 名称 | 值 |
+|------|----|
+| `NODESEEK_USER_AGENT` | 获取 Cookie 时浏览器的完整 User-Agent（建议填写） |
+| `NODESEEK_CHECKIN_HOUR` | 每天首次尝试时间，UTC+8 小时，默认 `9` |
+| `NODESEEK_CHECKIN_RANDOM` | `true` 试试手气；`false` 固定奖励 |
 
 ## 6. 建表
 
@@ -94,11 +103,12 @@ https://nodeseek-keyword-push.<子域>.workers.dev/setup-webhook?secret=你的AD
 /add VPS
 /list
 /check
+/signin
 ```
 
 首次会静默标记旧帖，之后每分钟自动检查。
 
-常用：`/del` `/pause` `/resume` `/status` `/help`
+常用：`/del` `/pause` `/resume` `/signin` `/status` `/help`
 
 ---
 
@@ -108,6 +118,7 @@ https://nodeseek-keyword-push.<子域>.workers.dev/setup-webhook?secret=你的AD
 - 改 Secret → 控制台改完 Deploy；Token 变了需重开 `/setup-webhook`  
 - 手动检查：`/check?secret=...`；日志：Worker → **Logs**  
 - Bot 不回：Webhook 是否成功、Secret 是否 Deploy、`ALLOWED_USER_IDS` 是否包含你  
+- 签到失败：先用 `/signin` 看 HTTP 状态；Cookie 失效时重新复制完整 Cookie，并同步更新浏览器 User-Agent。NodeSeek 也可能拒绝 Cloudflare Worker 出口请求。
 - 勿泄露 Token、`ADMIN_SECRET`、带 `secret=` 的 URL  
 
 更多说明见 [README.md](./README.md)。

@@ -19,3 +19,7 @@ RSS_URL = "https://rss.nodeseek.com/"
 # Optional: comma-separated Telegram user IDs allowed to manage keywords.
 # Leave empty to allow anyone who can message the bot (not recommended).
 ALLOWED_USER_IDS = "5093323865"
+# NodeSeek automatic check-in starts at this hour in UTC+8.
+NODESEEK_CHECKIN_HOUR = "9"
+# true = random reward; false = fixed reward.
+NODESEEK_CHECKIN_RANDOM = "true"
